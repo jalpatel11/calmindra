@@ -23,5 +23,3 @@ This is **Phase One** of the project, focused entirely on backend and inference 
 - Add journaling, feedback scoring, and long-term sentiment tracking
 - Prepare the system for deployment on Hugging Face Spaces or a cloud backend
 
-## 📁 Directory Snapshot
-
