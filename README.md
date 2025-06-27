@@ -245,3 +245,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 **Calmindra** - Professional Mental Health Chatbot Solution
+
+---
+
+For feedback, email @ jal85524@gmail.com
