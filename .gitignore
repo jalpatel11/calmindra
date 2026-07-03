@@ -1,9 +1,49 @@
-.env
+# Dependency directories
+node_modules/
+/jspm_packages/
+
+# Next.js build outputs
+.next/
+out/
+.turbo/
+
+# Python Cache & Virtual Environments
 __pycache__/
 *.pyc
-.env/
-*.env
-*.log
-*.sqlite3
+*.pyo
+*.pyd
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
 calmindra_env/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.local
+
+# Logs and databases
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.sqlite3
+*.sqlite
+
+# IDEs and OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+.idea/
