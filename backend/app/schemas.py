@@ -7,3 +7,18 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     bot_message: str = Field(..., example="I'm here to listen. What’s on your mind?")
+
+class ThreadCreate(BaseModel):
+    id: str = Field(..., example="thread_123")
+    title: str = Field(..., example="New Chat Thread")
+
+class ThreadResponse(BaseModel):
+    id: str
+    title: str
+    createdAt: str
+
+class MessageResponse(BaseModel):
+    id: str
+    role: str
+    content: str
+    createdAt: str

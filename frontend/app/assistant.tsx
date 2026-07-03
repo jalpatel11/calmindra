@@ -1,6 +1,10 @@
 "use client";
 
-import { AssistantRuntimeProvider } from "@assistant-ui/react";
+import { 
+  AssistantRuntimeProvider, 
+  unstable_useRemoteThreadListRuntime as useRemoteThreadListRuntime,
+  useThreadListItem,
+} from "@assistant-ui/react";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { Thread } from "@/components/assistant-ui/thread";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -8,18 +12,35 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Heart, Brain } from "lucide-react";
+import { myThreadListAdapter, makeHistoryAdapter } from "@/hooks/use-thread-manager";
 
 export const Assistant = () => {
-  const runtime = useChatRuntime({
-    api: "/api/chat",
-    initialMessages: [
-      {
-        id: "welcome-msg",
-        role: "assistant",
-        content: "Hello! I'm **Calmindra**, your compassionate mental health companion. 🌸\n\nI'm here to provide a safe, non-judgmental space where you can:\n\n- 💙 Share your thoughts and feelings\n- 🌿 Explore coping strategies  \n- 💜 Find emotional support\n- 🧘‍♀️ Practice mindfulness techniques\n- 🌟 Work through daily challenges\n\nTake a deep breath, and know that whatever you're going through, you don't have to face it alone. \n\n**How are you feeling today?** Feel free to share as much or as little as you'd like - I'm here to listen. 💕",
-        createdAt: new Date(),
-      },
-    ],
+  const runtime = useRemoteThreadListRuntime({
+    adapter: myThreadListAdapter,
+    runtimeHook: () => {
+      // Fetch the thread ID for the currently mounted thread from the assistant-ui context
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const { id: threadId } = useThreadListItem();
+      
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      return useChatRuntime({
+        api: "/api/chat",
+        headers: {
+          "x-session-id": threadId,
+        },
+        adapters: {
+          history: makeHistoryAdapter(threadId),
+        },
+        initialMessages: [
+          {
+            id: "welcome-msg",
+            role: "assistant",
+            content: "Hello! I'm **Calmindra**, your compassionate mental health companion. 🌸\n\nI'm here to provide a safe, non-judgmental space where you can:\n\n- 💙 Share your thoughts and feelings\n- 🌿 Explore coping strategies  \n- 💜 Find emotional support\n- 🧘‍♀️ Practice mindfulness techniques\n- 🌟 Work through daily challenges\n\nTake a deep breath, and know that whatever you're going through, you don't have to face it alone. \n\n**How are you feeling today?** Feel free to share as much or as little as you'd like - I'm here to listen. 💕",
+            createdAt: new Date(),
+          },
+        ],
+      });
+    },
   });
 
   return (

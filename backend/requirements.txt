@@ -1,6 +1,7 @@
 fastapi
 uvicorn
-torch
 pydantic
 httpx
 redis
+google-genai
+neo4j
