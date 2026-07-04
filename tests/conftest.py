@@ -2,6 +2,10 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from app.main import app as fastapi_app
 
+
+TEST_USER_ID = "usr_11111111111111111111111111111111"
+TEST_BACKEND_SECRET = "test-backend-secret"
+
 @pytest.fixture
 def mock_neo4j():
     client = MagicMock()
@@ -17,7 +21,7 @@ def mock_neo4j():
         "title": "Test Thread", 
         "createdAt": "2026-07-03T12:00:00Z"
     }])
-    client.delete_thread = AsyncMock()
+    client.delete_thread = AsyncMock(return_value=True)
     client.get_messages = AsyncMock(return_value=[
         {"id": "msg_1", "role": "user", "content": "Hello", "createdAt": "2026-07-03T12:00:00Z"},
         {"id": "msg_2", "role": "assistant", "content": "Hi there", "createdAt": "2026-07-03T12:01:00Z"}
@@ -40,10 +44,17 @@ def mock_vertex():
     client = MagicMock()
     client.get_embedding = AsyncMock(return_value=[0.1] * 768)
     client.generate_completion = AsyncMock(return_value="I am Calmindra, how can I help you?")
+
+    async def stream_completion(prompt: str, system_instruction: str = None):
+        yield "I am Calmindra, "
+        yield "streaming now."
+
+    client.stream_completion = stream_completion
     return client
 
 @pytest.fixture(autouse=True)
-def setup_app_state(mock_neo4j, mock_vertex):
+def setup_app_state(monkeypatch, mock_neo4j, mock_vertex):
+    monkeypatch.setenv("BACKEND_API_SECRET", TEST_BACKEND_SECRET)
     # Inject our mocked clients to fastapi app.state to bypass network lookups during tests
     fastapi_app.state.neo4j = mock_neo4j
     fastapi_app.state.vertex = mock_vertex

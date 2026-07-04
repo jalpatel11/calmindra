@@ -24,8 +24,8 @@ fi
 export $(grep -v '^#' .env | xargs)
 
 # Validate loaded variables
-if [ -z "$NEO4J_URI" ] || [ -z "$NEO4J_PASSWORD" ] || [ -z "$GEMINI_API_KEY" ] || [ -z "$REDIS_URL" ]; then
-    echo -e "${RED}Error: Missing database or API key variables in .env!${NC}"
+if [ -z "$NEO4J_URI" ] || [ -z "$NEO4J_PASSWORD" ] || [ -z "$GEMINI_API_KEY" ] || [ -z "$REDIS_URL" ] || [ -z "$BACKEND_API_SECRET" ] || [ -z "$FRONTEND_ORIGINS" ]; then
+    echo -e "${RED}Error: Missing required backend environment variables in .env!${NC}"
     exit 1
 fi
 
@@ -87,6 +87,8 @@ create_secret_if_missing "neo4j-uri" "$NEO4J_URI"
 create_secret_if_missing "neo4j-password" "$NEO4J_PASSWORD"
 create_secret_if_missing "neo4j-user" "$NEO4J_USER_VAL"
 create_secret_if_missing "redis-url" "$REDIS_URL"
+create_secret_if_missing "backend-api-secret" "$BACKEND_API_SECRET"
+create_secret_if_missing "frontend-origins" "$FRONTEND_ORIGINS"
 
 # 7. Deploy to GCP Cloud Run
 echo -e "${YELLOW}Deploying FastAPI backend to Cloud Run... (This builds the image in GCP Cloud Build and deploys)${NC}"
@@ -97,9 +99,10 @@ gcloud run deploy calmindra-backend \
   --allow-unauthenticated \
   --memory=512Mi \
   --cpu=1 \
-  --max-instances=3 \
-  --min-instances=0 \
-  --set-secrets="GEMINI_API_KEY=gemini-api-key:latest,NEO4J_URI=neo4j-uri:latest,NEO4J_USER=neo4j-user:latest,NEO4J_PASSWORD=neo4j-password:latest,REDIS_URL=redis-url:latest"
+	  --max-instances=3 \
+	  --min-instances=0 \
+	  --set-env-vars="GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash},GEMINI_EMBEDDING_MODEL=${GEMINI_EMBEDDING_MODEL:-gemini-embedding-001}" \
+	  --set-secrets="GEMINI_API_KEY=gemini-api-key:latest,NEO4J_URI=neo4j-uri:latest,NEO4J_USER=neo4j-user:latest,NEO4J_PASSWORD=neo4j-password:latest,REDIS_URL=redis-url:latest,BACKEND_API_SECRET=backend-api-secret:latest,FRONTEND_ORIGINS=frontend-origins:latest"
 
 echo ""
 echo -e "${GREEN}=== Deployment Successful! ===${NC}"

@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from redis.asyncio import Redis
 
+from app.routes.auth import router as auth_router
 from app.routes.chat import router as chat_router
 from app.routes.threads import router as threads_router
 from app.services.neo4j_client import Neo4jClient
@@ -18,13 +19,18 @@ app = FastAPI(
     description="Privacy-first mental health chatbot with Cloud RAG & Neo4j",
 )
 
-# Enable CORS for frontend integration
+def _get_allowed_origins():
+    raw_origins = os.getenv("FRONTEND_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+    return [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+
+
+# Enable CORS only for configured frontend origins.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust for production
+    allow_origins=_get_allowed_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Backend-Secret", "X-Session-ID", "X-User-ID"],
 )
 
 @app.on_event("startup")
@@ -70,5 +76,10 @@ async def shutdown_event():
         await app.state.neo4j.close()
 
 # Include routes
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(chat_router, prefix="/chat", tags=["chat"])
 app.include_router(threads_router, prefix="/threads", tags=["threads"])
+
+@app.get("/healthz", tags=["health"])
+async def healthz():
+    return {"status": "ok"}

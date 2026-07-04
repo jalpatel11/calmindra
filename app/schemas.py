@@ -22,3 +22,6 @@ class MessageResponse(BaseModel):
     role: str
     content: str
     createdAt: str
+
+class UserResponse(BaseModel):
+    id: str

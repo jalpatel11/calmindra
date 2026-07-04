@@ -11,7 +11,7 @@ The Next.js frontend has been decoupled and is hosted in a separate repository: 
 ```
 Backend (FastAPI)       AI Engine (Vertex AI)
       ↓                        ↓
-  Port 8000           ←──→ Gemini-1.5-Flash
+  Port 8000           ←──→ Gemini 2.5 Flash
       ↓                        ↓
  Neo4j AuraDB         Semantic Vector Embeddings
 (Graph History)          (text-embedding-004)
@@ -61,8 +61,16 @@ NEO4J_URI=neo4j+s://<your-auradb-id>.databases.neo4j.io
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=<your-password>
 GEMINI_API_KEY=<your-gemini-api-key>
+GEMINI_MODEL=gemini-2.5-flash
+GEMINI_EMBEDDING_MODEL=gemini-embedding-001
 REDIS_URL=redis://localhost:6379  # optional fallback URL
+FRONTEND_ORIGINS=https://your-frontend-domain.example
+BACKEND_API_SECRET=<same-secret-configured-in-frontend>
 ```
+
+`BACKEND_API_SECRET` is required for protected backend routes. The Next.js frontend sends it from server-side proxy routes as `X-Backend-Secret`, along with a derived `X-User-ID`. Do not expose this value in browser-visible environment variables.
+
+The streaming chat endpoint is available at `POST /chat/stream`; the existing `POST /chat/` JSON endpoint remains available for compatibility.
 
 ### Run Locally
 ```bash
