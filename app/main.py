@@ -29,25 +29,34 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    # 1. Initialize Redis connection
-    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-    logger.info(f"Connecting to Redis at: {redis_url}")
-    app.state.redis = Redis.from_url(
-        redis_url, encoding="utf-8", decode_responses=True
-    )
-    
-    # 2. Initialize Neo4j Client & Index
-    logger.info("Initializing Neo4j Client...")
-    app.state.neo4j = Neo4jClient()
-    await app.state.neo4j.initialize_database()
-    
-    # 3. Initialize Vertex AI Client (Gemini + Embeddings)
-    logger.info("Initializing Vertex AI Client...")
-    app.state.vertex = VertexClient()
-    
     # Rate limiting in-memory fallback store
     app.state._rate_limit_store = {}
     app.state._time_func = time.time
+
+    # 1. Initialize Redis connection
+    try:
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        logger.info(f"Connecting to Redis at: {redis_url}")
+        app.state.redis = Redis.from_url(
+            redis_url, encoding="utf-8", decode_responses=True
+        )
+    except Exception as e:
+        logger.error(f"Failed to connect to Redis: {e}. Fallback to memory will be used.")
+    
+    # 2. Initialize Neo4j Client & Index
+    try:
+        logger.info("Initializing Neo4j Client...")
+        app.state.neo4j = Neo4jClient()
+        await app.state.neo4j.initialize_database()
+    except Exception as e:
+        logger.error(f"Failed to initialize Neo4j database: {e}. Graph functionality will fail until configured.")
+    
+    # 3. Initialize Vertex AI Client (Gemini + Embeddings)
+    try:
+        logger.info("Initializing Vertex AI Client...")
+        app.state.vertex = VertexClient()
+    except Exception as e:
+        logger.error(f"Failed to initialize Vertex AI client: {e}. Completions will fail until configured.")
 
 @app.on_event("shutdown")
 async def shutdown_event():
