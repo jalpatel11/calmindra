@@ -60,12 +60,12 @@ class Neo4jClient:
         MERGE (t:Thread {id: $thread_id})
         ON CREATE SET t.title = $title, t.createdAt = datetime()
         MERGE (u)-[:HAS_THREAD]->(t)
-        RETURN t.id AS id, t.title AS title, t.createdAt AS createdAt
+        RETURN t.id AS id, t.title AS title, toString(t.createdAt) AS createdAt
         """
         records, _, _ = await self.driver.execute_query(
             query, user_id=user_id, thread_id=thread_id, title=title
         )
-        return records[0] if records else None
+        return dict(records[0]) if records else None
 
     async def get_threads(self, user_id: str):
         query = """

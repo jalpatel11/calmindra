@@ -16,8 +16,8 @@ class VertexClient:
             logger.info("GEMINI_API_KEY not found in env. Initializing genai.Client with GCP environment credentials.")
             self.client = genai.Client()
             
-        self.model = "gemini-1.5-flash"
-        self.embedding_model = "text-embedding-004"
+        self.model = "gemini-2.5-flash"
+        self.embedding_model = "gemini-embedding-001"
         logger.info(f"[VertexClient] Initialized with model={self.model}, embedding_model={self.embedding_model}")
 
     async def generate_completion(self, prompt: str, system_instruction: str = None) -> str:
@@ -38,9 +38,11 @@ class VertexClient:
 
     async def get_embedding(self, text: str) -> list[float]:
         try:
+            config = types.EmbedContentConfig(output_dimensionality=768)
             response = await self.client.aio.models.embed_content(
                 model=self.embedding_model,
                 contents=text,
+                config=config,
             )
             if response and response.embeddings:
                 return response.embeddings[0].values
