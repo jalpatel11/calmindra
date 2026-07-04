@@ -34,3 +34,18 @@ async def require_proxy_identity(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
     return ProxyIdentity(user_id=x_user_id)
+
+
+async def require_backend_secret(
+    x_backend_secret: Optional[str] = Header(None, alias="X-Backend-Secret"),
+):
+    expected_secret = os.getenv("BACKEND_API_SECRET")
+
+    if not expected_secret:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Backend proxy authentication is not configured.",
+        )
+
+    if not x_backend_secret or not hmac.compare_digest(x_backend_secret, expected_secret):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
