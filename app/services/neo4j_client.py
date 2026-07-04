@@ -57,6 +57,10 @@ class Neo4jClient:
         
         query = """
         MATCH (u:User {id: $user_id})
+        OPTIONAL MATCH (existing:Thread {id: $thread_id})
+        OPTIONAL MATCH (owner:User)-[:HAS_THREAD]->(existing)
+        WITH u, existing, collect(owner.id) AS owner_ids
+        WHERE existing IS NULL OR $user_id IN owner_ids OR size(owner_ids) = 0
         MERGE (t:Thread {id: $thread_id})
         ON CREATE SET t.title = $title, t.createdAt = datetime()
         MERGE (u)-[:HAS_THREAD]->(t)
@@ -76,41 +80,56 @@ class Neo4jClient:
         records, _, _ = await self.driver.execute_query(query, user_id=user_id)
         return [dict(record) for record in records]
 
-    async def delete_thread(self, thread_id: str):
+    async def delete_thread(self, user_id: str, thread_id: str):
         query = """
-        MATCH (t:Thread {id: $thread_id})
+        MATCH (:User {id: $user_id})-[:HAS_THREAD]->(t:Thread {id: $thread_id})
         OPTIONAL MATCH (t)-[:HAS_MESSAGE]->(m:Message)
-        DETACH DELETE t, m
+        WITH t, collect(m) AS messages
+        FOREACH (message IN messages | DETACH DELETE message)
+        DETACH DELETE t
+        RETURN 1 AS deleted
         """
-        await self.driver.execute_query(query, thread_id=thread_id)
+        records, _, _ = await self.driver.execute_query(
+            query, user_id=user_id, thread_id=thread_id
+        )
+        return bool(records)
 
-    async def get_messages(self, thread_id: str):
+    async def get_messages(self, user_id: str, thread_id: str):
         query = """
-        MATCH (t:Thread {id: $thread_id})-[:HAS_MESSAGE]->(m:Message)
+        MATCH (:User {id: $user_id})-[:HAS_THREAD]->(t:Thread {id: $thread_id})-[:HAS_MESSAGE]->(m:Message)
         RETURN m.id AS id, m.role AS role, m.content AS content, toString(m.createdAt) AS createdAt
         ORDER BY m.createdAt ASC
         """
-        records, _, _ = await self.driver.execute_query(query, thread_id=thread_id)
+        records, _, _ = await self.driver.execute_query(
+            query, user_id=user_id, thread_id=thread_id
+        )
         return [dict(record) for record in records]
 
-    async def save_message(self, thread_id: str, message_id: str, role: str, content: str):
+    async def save_message(
+        self, user_id: str, thread_id: str, message_id: str, role: str, content: str
+    ):
         query = """
-        MATCH (t:Thread {id: $thread_id})
+        MATCH (:User {id: $user_id})-[:HAS_THREAD]->(t:Thread {id: $thread_id})
         CREATE (m:Message {id: $message_id, role: $role, content: $content, createdAt: datetime()})
         CREATE (t)-[:HAS_MESSAGE]->(m)
         WITH t, m
         OPTIONAL MATCH (t)-[:HAS_MESSAGE]->(prev:Message)
-        WHERE prev <> m
-        WITH m, prev ORDER BY prev.createdAt DESC LIMIT 1
+        WITH m, prev ORDER BY prev.createdAt DESC
+        WITH m, [candidate IN collect(prev) WHERE candidate <> m][0] AS prev
         FOREACH (_ IN CASE WHEN prev IS NOT NULL THEN [1] ELSE [] END |
             CREATE (prev)-[:NEXT_MESSAGE]->(m)
         )
         RETURN m.id AS id, m.role AS role, m.content AS content, toString(m.createdAt) AS createdAt
         """
         records, _, _ = await self.driver.execute_query(
-            query, thread_id=thread_id, message_id=message_id, role=role, content=content
+            query,
+            user_id=user_id,
+            thread_id=thread_id,
+            message_id=message_id,
+            role=role,
+            content=content,
         )
-        return records[0] if records else None
+        return dict(records[0]) if records else None
 
     async def ingest_document(self, doc_id: str, content: str, embedding: list[float]):
         query = """
