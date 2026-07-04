@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 class Neo4jClient:
     def __init__(self):
         self.uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-        self.user = os.getenv("NEO4J_USER", "neo4j")
+        self.user = os.getenv("NEO4J_USER", os.getenv("NEO4J_USERNAME", "neo4j"))
         self.password = os.getenv("NEO4J_PASSWORD", "password123")
         
         logger.info(f"[Neo4jClient] Initializing connection to uri={self.uri}")

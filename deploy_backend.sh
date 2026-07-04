@@ -29,6 +29,10 @@ if [ -z "$NEO4J_URI" ] || [ -z "$NEO4J_PASSWORD" ] || [ -z "$GEMINI_API_KEY" ] |
     exit 1
 fi
 
+# Resolve username value (falls back to NEO4J_USERNAME or defaults to neo4j)
+NEO4J_USER_VAL=${NEO4J_USER:-$NEO4J_USERNAME}
+NEO4J_USER_VAL=${NEO4J_USER_VAL:-neo4j}
+
 # 2. Check if gcloud CLI is installed
 if ! command -v gcloud &> /dev/null; then
     echo -e "${RED}Error: gcloud CLI is not installed on this system.${NC}"
@@ -81,6 +85,7 @@ create_secret_if_missing() {
 create_secret_if_missing "gemini-api-key" "$GEMINI_API_KEY"
 create_secret_if_missing "neo4j-uri" "$NEO4J_URI"
 create_secret_if_missing "neo4j-password" "$NEO4J_PASSWORD"
+create_secret_if_missing "neo4j-user" "$NEO4J_USER_VAL"
 create_secret_if_missing "redis-url" "$REDIS_URL"
 
 # 7. Deploy to GCP Cloud Run
@@ -94,7 +99,7 @@ gcloud run deploy calmindra-backend \
   --cpu=1 \
   --max-instances=3 \
   --min-instances=0 \
-  --set-secrets="GEMINI_API_KEY=gemini-api-key:latest,NEO4J_URI=neo4j-uri:latest,NEO4J_PASSWORD=neo4j-password:latest,REDIS_URL=redis-url:latest"
+  --set-secrets="GEMINI_API_KEY=gemini-api-key:latest,NEO4J_URI=neo4j-uri:latest,NEO4J_USER=neo4j-user:latest,NEO4J_PASSWORD=neo4j-password:latest,REDIS_URL=redis-url:latest"
 
 echo ""
 echo -e "${GREEN}=== Deployment Successful! ===${NC}"

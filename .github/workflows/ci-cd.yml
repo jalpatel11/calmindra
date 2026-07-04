@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -37,7 +37,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Authenticate with GCP
         uses: google-github-actions/auth@v2
@@ -68,4 +68,4 @@ jobs:
             --region us-central1 \
             --platform managed \
             --allow-unauthenticated \
-            --set-secrets="GEMINI_API_KEY=gemini-api-key:latest,NEO4J_URI=neo4j-uri:latest,NEO4J_PASSWORD=neo4j-password:latest,REDIS_URL=redis-url:latest"
+            --set-secrets="GEMINI_API_KEY=gemini-api-key:latest,NEO4J_URI=neo4j-uri:latest,NEO4J_USER=neo4j-user:latest,NEO4J_PASSWORD=neo4j-password:latest,REDIS_URL=redis-url:latest"
