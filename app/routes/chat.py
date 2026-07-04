@@ -32,6 +32,7 @@ async def validate_and_rate_limit(
     response_model=ChatResponse
 )
 async def handle_chat(
+    request: Request,
     req: ChatRequest = Depends(validate_and_rate_limit),
     x_session_id: Optional[str] = Header(None),
     x_user_id: Optional[str] = Header("default_user")
@@ -40,8 +41,8 @@ async def handle_chat(
     session_id = x_session_id or req.session_id or str(uuid4())
     
     # Grab services from app state
-    neo4j = req.app.state.neo4j
-    vertex = req.app.state.vertex
+    neo4j = request.app.state.neo4j
+    vertex = request.app.state.vertex
     
     try:
         # Ensure user and thread exist in Neo4j
