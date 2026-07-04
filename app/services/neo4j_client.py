@@ -110,7 +110,7 @@ class Neo4jClient:
         records, _, _ = await self.driver.execute_query(
             query, thread_id=thread_id, message_id=message_id, role=role, content=content
         )
-        return records[0] if records else None
+        return dict(records[0]) if records else None
 
     async def ingest_document(self, doc_id: str, content: str, embedding: list[float]):
         query = """
