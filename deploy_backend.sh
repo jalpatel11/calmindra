@@ -12,20 +12,20 @@ NC='\033[0m'
 
 echo -e "${BLUE}=== Calmindra Backend Cloud Run Deployer ===${NC}"
 
-# 1. Check if backend/.env exists
-if [ ! -f "backend/.env" ]; then
-    echo -e "${RED}Error: backend/.env is missing!${NC}"
-    echo -e "Please create 'backend/.env' using 'backend/.env.example' as a template before running this deployer."
+# 1. Check if .env exists
+if [ ! -f ".env" ]; then
+    echo -e "${RED}Error: .env is missing!${NC}"
+    echo -e "Please create '.env' using '.env.example' as a template before running this deployer."
     exit 1
 fi
 
-# Load variables from backend/.env
+# Load variables from .env
 # Sourced in a subshell to avoid executing unwanted commands
-export $(grep -v '^#' backend/.env | xargs)
+export $(grep -v '^#' .env | xargs)
 
 # Validate loaded variables
 if [ -z "$NEO4J_URI" ] || [ -z "$NEO4J_PASSWORD" ] || [ -z "$GEMINI_API_KEY" ] || [ -z "$REDIS_URL" ]; then
-    echo -e "${RED}Error: Missing database or API key variables in backend/.env!${NC}"
+    echo -e "${RED}Error: Missing database or API key variables in .env!${NC}"
     exit 1
 fi
 
@@ -87,7 +87,7 @@ create_secret_if_missing "redis-url" "$REDIS_URL"
 echo -e "${YELLOW}Deploying FastAPI backend to Cloud Run... (This builds the image in GCP Cloud Build and deploys)${NC}"
 
 gcloud run deploy calmindra-backend \
-  --source=./backend \
+  --source=. \
   --region=us-central1 \
   --allow-unauthenticated \
   --memory=512Mi \

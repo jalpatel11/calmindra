@@ -13,13 +13,13 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}=== Starting Calmindra Dev Environment (Cloud-Connected) ===${NC}"
+echo -e "${BLUE}=== Starting Calmindra Backend Service (Cloud-Connected) ===${NC}"
 
-# Check if backend/.env file exists
-if [ ! -f "backend/.env" ]; then
-    echo -e "${RED}Error: backend/.env file is missing!${NC}"
-    echo -e "Please create 'backend/.env' with your cloud credentials before starting."
-    echo -e "You can copy 'backend/.env.example' as a template."
+# Check if .env file exists
+if [ ! -f ".env" ]; then
+    echo -e "${RED}Error: .env file is missing!${NC}"
+    echo -e "Please create '.env' with your cloud credentials before starting."
+    echo -e "You can copy '.env.example' as a template."
     exit 1
 fi
 
@@ -46,7 +46,7 @@ fi
 
 # Start Backend via Docker Compose
 echo -e "${YELLOW}Starting Backend service via Docker Compose...${NC}"
-$DOCKER_COMPOSE -f backend/docker-compose.yml up -d --build
+$DOCKER_COMPOSE -f docker-compose.yml up -d --build
 
 echo -e "${GREEN}Backend is up and running (connected to Cloud Neo4j & Vertex AI)!${NC}"
 echo -e "Backend API available at: ${BLUE}http://localhost:8000${NC}"
@@ -55,23 +55,13 @@ echo -e "API Docs available at:    ${BLUE}http://localhost:8000/docs${NC}"
 # Set up trap to stop docker containers on exit/Ctrl+C
 cleanup() {
     echo -e "\n${YELLOW}Stopping backend service...${NC}"
-    $DOCKER_COMPOSE -f backend/docker-compose.yml down
+    $DOCKER_COMPOSE -f docker-compose.yml down
     echo -e "${GREEN}Services stopped successfully.${NC}"
 }
 trap cleanup EXIT
 
-# Start Frontend
-echo -e "${YELLOW}Setting up frontend...${NC}"
-cd frontend
-
-if [ ! -d "node_modules" ]; then
-    echo -e "${YELLOW}Installing npm dependencies...${NC}"
-    npm install
-fi
-
-echo -e "${GREEN}Starting frontend dev server...${NC}"
-echo -e "Frontend will be available at: ${BLUE}http://localhost:3000${NC}"
-echo -e "Press ${YELLOW}Ctrl+C${NC} to stop all services."
+echo -e "Press ${YELLOW}Ctrl+C${NC} to stop the backend service."
 echo ""
 
-npm run dev
+# Keep script running and tail backend logs
+$DOCKER_COMPOSE -f docker-compose.yml logs -f backend
