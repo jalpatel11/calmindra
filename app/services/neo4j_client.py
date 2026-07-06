@@ -51,6 +51,24 @@ class Neo4jClient:
         records, _, _ = await self.driver.execute_query(query, user_id=user_id)
         return records[0]["id"] if records else None
 
+    async def get_user_by_email(self, email: str):
+        query = """
+        MATCH (u:User {email: $email})
+        RETURN u.id AS id, u.email AS email, u.passwordHash AS passwordHash
+        """
+        records, _, _ = await self.driver.execute_query(query, email=email)
+        return dict(records[0]) if records else None
+
+    async def create_credentials_user(self, user_id: str, email: str, password_hash: str):
+        query = """
+        CREATE (u:User {id: $user_id, email: $email, passwordHash: $password_hash, createdAt: datetime()})
+        RETURN u.id AS id, u.email AS email
+        """
+        records, _, _ = await self.driver.execute_query(
+            query, user_id=user_id, email=email, password_hash=password_hash
+        )
+        return dict(records[0]) if records else None
+
     async def create_thread(self, user_id: str, thread_id: str, title: str):
         # First ensure user exists
         await self.create_user(user_id)

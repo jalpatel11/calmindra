@@ -25,3 +25,7 @@ class MessageResponse(BaseModel):
 
 class UserResponse(BaseModel):
     id: str
+
+class CredentialsAuthRequest(BaseModel):
+    email: str
+    password: str
